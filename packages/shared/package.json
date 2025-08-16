@@ -1,0 +1,22 @@
+{
+  "name": "@ufc-platform/shared",
+  "version": "1.0.0",
+  "description": "Shared types, interfaces, and utilities for UFC Prediction Platform",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src --ext .ts",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "zod": "^3.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.1.0",
+    "vitest": "^0.34.0"
+  }
+}
