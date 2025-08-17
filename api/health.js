@@ -1,24 +1,11 @@
-export default function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-
+// Simple health check endpoint for Vercel
+module.exports = (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
   res.status(200).json({
-    status: 'healthy',
+    status: 'OK',
+    message: 'UFC Prediction Platform API is running!',
     timestamp: new Date().toISOString(),
-    deployment: 'vercel',
-    endpoints: [
-      '/api/health',
-      '/api/demo', 
-      '/api/fighters',
-      '/api/odds',
-      '/api/predictions',
-      '/api/live-data',
-      '/api/espn-live'
-    ]
+    deployment: 'Vercel',
+    version: '1.0.0'
   });
-}
+};

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UFC Prediction Platform - WORKING!</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: white;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            text-align: center;
+            max-width: 800px;
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .status {
+            background: rgba(0, 255, 0, 0.2);
+            border: 2px solid #00ff00;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            font-size: 1.2rem;
+        }
+        .button {
+            background: linear-gradient(45deg, #ff6b35, #ff8e3c);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            min-height: 50px;
+        }
+        .success {
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid #00ff00;
+        }
+        .error {
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px solid #ff0000;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🥊 UFC Prediction Platform</h1>
+        
+        <div class="status">
+            ✅ VERCEL DEPLOYMENT IS WORKING!
+        </div>
+        
+        <p>This confirms that Vercel can serve static files correctly.</p>
+        
+        <button class="button" onclick="testAPI()">Test API Health</button>
+        <button class="button" onclick="testFighters()">Test Fighters API</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        async function testAPI() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Testing API...';
+            
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                result.className = 'success';
+                result.innerHTML = `
+                    <h3>✅ API Working!</h3>
+                    <p><strong>Status:</strong> ${data.status}</p>
+                    <p><strong>Message:</strong> ${data.message}</p>
+                    <p><strong>Timestamp:</strong> ${data.timestamp}</p>
+                `;
+            } catch (error) {
+                result.className = 'error';
+                result.innerHTML = `
+                    <h3>❌ API Error</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+        
+        async function testFighters() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Testing Fighters API...';
+            
+            try {
+                const response = await fetch('/api/v1/fighters');
+                const data = await response.json();
+                
+                result.className = 'success';
+                result.innerHTML = `
+                    <h3>✅ Fighters API Working!</h3>
+                    <p><strong>Success:</strong> ${data.success}</p>
+                    <p><strong>Total Fighters:</strong> ${data.total}</p>
+                    <p><strong>Message:</strong> ${data.message}</p>
+                `;
+            } catch (error) {
+                result.className = 'error';
+                result.innerHTML = `
+                    <h3>❌ Fighters API Error</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
