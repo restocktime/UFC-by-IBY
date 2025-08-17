@@ -1,0 +1,1 @@
+UFC Platform Test File - If you can see this, static files are working!
