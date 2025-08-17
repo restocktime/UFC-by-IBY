@@ -5,22 +5,8 @@
   "private": true,
   "workspaces": [],
   "scripts": {
-    "build": "echo 'Build complete - static files ready'",
-    "start": "node api/index.js",
-    "test": "echo 'Tests disabled for Vercel deployment'",
-    "test:integration": "echo 'Integration tests disabled for Vercel deployment'",
-    "test:integration:watch": "echo 'Integration tests disabled for Vercel deployment'",
-    "test:e2e": "echo 'E2E tests disabled for Vercel deployment'",
-    "test:performance": "echo 'Performance tests disabled for Vercel deployment'",
-    "test:chaos": "echo 'Chaos tests disabled for Vercel deployment'",
-    "test:ci": "echo 'CI tests disabled for Vercel deployment'",
-    "test:all": "echo 'All tests disabled for Vercel deployment'",
-    "lint": "echo 'Linting disabled for Vercel deployment'",
-    "format:check": "echo 'Format check disabled for Vercel deployment'",
-    "format": "echo 'Format disabled for Vercel deployment'",
-    "dev": "echo 'Development mode - use ./scripts/start-local.sh for local development'",
-    "clean": "echo 'Clean disabled for Vercel deployment'",
-    "vercel-build": "echo 'Preparing Vercel deployment...' && cp -r packages/frontend/public/* . && echo 'Frontend files copied to root' && echo 'Vercel build complete - API endpoints ready'"
+    "build": "echo 'Build complete'",
+    "start": "echo 'Serverless deployment - no start needed'"
   },
   "dependencies": {
     "express": "^4.18.0",

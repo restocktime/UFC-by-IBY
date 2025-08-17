@@ -1,13 +1,12 @@
 {
   "version": 2,
-  "buildCommand": "npm run vercel-build",
   "builds": [
     {
       "src": "api/*.js",
       "use": "@vercel/node"
     },
     {
-      "src": "packages/frontend/public/**",
+      "src": "packages/frontend/public/index.html",
       "use": "@vercel/static"
     }
   ],
@@ -17,15 +16,8 @@
       "dest": "/api/$1.js"
     },
     {
-      "src": "/(.*)",
-      "dest": "/$1"
+      "src": "/",
+      "dest": "/packages/frontend/public/index.html"
     }
-  ],
-  "functions": {
-    "api/*.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
-  "ignoreCommand": "npx vercel-ignore",
-  "installCommand": "npm install --production=false"
+  ]
 }
