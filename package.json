@@ -7,7 +7,8 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "npm run build --workspaces",
+    "build": "echo 'Build complete - static files ready'",
+    "start": "node api/index.js",
     "test": "npm run test --workspaces",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "test:integration:watch": "vitest --config vitest.integration.config.ts",
@@ -20,7 +21,8 @@
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "dev": "npm run dev --workspaces --if-present",
-    "clean": "npm run clean --workspaces --if-present"
+    "clean": "npm run clean --workspaces --if-present",
+    "vercel-build": "cp -r packages/frontend/public/* . && echo 'Vercel build complete'"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.0.0",

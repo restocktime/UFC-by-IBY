@@ -1,0 +1,48 @@
+{
+  "short_name": "UFC Betting",
+  "name": "UFC Prediction & Betting Platform",
+  "description": "Real-time UFC betting analysis and predictions",
+  "icons": [
+    {
+      "src": "icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#1976d2",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "categories": ["sports", "finance", "entertainment"],
+  "shortcuts": [
+    {
+      "name": "Quick Analysis",
+      "short_name": "Analyze",
+      "description": "Quick bet analysis tool",
+      "url": "/mobile/analyze",
+      "icons": [{ "src": "icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Live Dashboard",
+      "short_name": "Dashboard",
+      "description": "Real-time betting dashboard",
+      "url": "/dashboard",
+      "icons": [{ "src": "icon-192x192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Calculator",
+      "short_name": "Calculator",
+      "description": "Betting calculator",
+      "url": "/mobile/calculator",
+      "icons": [{ "src": "icon-192x192.png", "sizes": "192x192" }]
+    }
+  ]
+}

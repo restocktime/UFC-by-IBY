@@ -1,30 +1,36 @@
 {
   "version": 2,
+  "name": "ufc-prediction-platform",
+  "buildCommand": "npm run vercel-build",
   "builds": [
     {
-      "src": "packages/api/src/index.ts",
+      "src": "api/index.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "packages/frontend/public/**",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "packages/api/src/index.ts"
+      "dest": "/api/index.js"
+    },
+    {
+      "src": "/health",
+      "dest": "/api/index.js"
+    },
+    {
+      "src": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|json))",
+      "dest": "/$1"
     },
     {
       "src": "/(.*)",
-      "dest": "packages/frontend/public/$1"
+      "dest": "/index.html"
     }
   ],
   "env": {
     "NODE_ENV": "production"
   },
   "functions": {
-    "packages/api/src/index.ts": {
+    "api/index.js": {
       "maxDuration": 30
     }
   }
