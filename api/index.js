@@ -132,6 +132,16 @@ const mockOdds = [
   }
 ];
 
+// Debug route for deployment issues
+app.get('/', (req, res) => {
+  res.json({
+    message: 'UFC Prediction Platform API is running!',
+    timestamp: new Date().toISOString(),
+    deployment: 'Vercel',
+    status: 'OK'
+  });
+});
+
 // Routes
 app.get('/health', (req, res) => {
   res.json({ 
