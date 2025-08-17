@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VERCEL TEST</title>
+</head>
+<body>
+    <h1 style="color: green; text-align: center; margin-top: 50px;">
+        ✅ VERCEL IS WORKING!
+    </h1>
+    <p style="text-align: center;">
+        If you can see this, the deployment is successful.
+    </p>
+    <div style="text-align: center; margin-top: 30px;">
+        <button onclick="testAPI()" style="padding: 10px 20px; background: blue; color: white; border: none; border-radius: 5px;">
+            Test API
+        </button>
+    </div>
+    <div id="result" style="text-align: center; margin-top: 20px;"></div>
+    
+    <script>
+        async function testAPI() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                document.getElementById('result').innerHTML = 
+                    '<div style="background: green; color: white; padding: 10px; margin: 20px;">API WORKING: ' + data.status + '</div>';
+            } catch (error) {
+                document.getElementById('result').innerHTML = 
+                    '<div style="background: red; color: white; padding: 10px; margin: 20px;">API ERROR: ' + error.message + '</div>';
+            }
+        }
+    </script>
+</body>
+</html>
