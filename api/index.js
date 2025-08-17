@@ -250,7 +250,7 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString(),
     deployment: 'Vercel',
     status: 'OK',
-    version: '1.0.0',
+    version: '1.0.2',
     endpoints: {
       health: '/api/health',
       fighters: '/api/v1/fighters',
@@ -269,7 +269,7 @@ app.get('/', (req, res) => {
 });
 
 // Routes
-app.get('/health', (req, res) => {
+app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     timestamp: new Date().toISOString(),
@@ -287,7 +287,7 @@ app.get('/health', (req, res) => {
 });
 
 // API v1 routes
-app.get('/v1/fighters', (req, res) => {
+app.get('/api/v1/fighters', (req, res) => {
   res.json({
     success: true,
     data: mockFighters,
@@ -296,7 +296,7 @@ app.get('/v1/fighters', (req, res) => {
   });
 });
 
-app.get('/v1/fighters/:id', (req, res) => {
+app.get('/api/v1/fighters/:id', (req, res) => {
   const fighter = mockFighters.find(f => f.id === parseInt(req.params.id));
   if (!fighter) {
     return res.status(404).json({ success: false, error: 'Fighter not found' });
@@ -304,7 +304,7 @@ app.get('/v1/fighters/:id', (req, res) => {
   res.json({ success: true, data: fighter });
 });
 
-app.get('/v1/predictions', (req, res) => {
+app.get('/api/v1/predictions', (req, res) => {
   res.json({
     success: true,
     data: mockPredictions,
@@ -313,7 +313,7 @@ app.get('/v1/predictions', (req, res) => {
   });
 });
 
-app.get('/v1/predictions/:id', (req, res) => {
+app.get('/api/v1/predictions/:id', (req, res) => {
   const prediction = mockPredictions.find(p => p.id === parseInt(req.params.id));
   if (!prediction) {
     return res.status(404).json({ success: false, error: 'Prediction not found' });
@@ -322,7 +322,7 @@ app.get('/v1/predictions/:id', (req, res) => {
 });
 
 // POST endpoint for predictions (expected by frontend)
-app.post('/v1/predictions', (req, res) => {
+app.post('/api/v1/predictions', (req, res) => {
   const { fightId, fighter1Id, fighter2Id, contextualData } = req.body;
   
   // Generate a mock prediction
@@ -354,7 +354,7 @@ app.post('/v1/predictions', (req, res) => {
 });
 
 // Live data endpoints
-app.get('/live-data', (req, res) => {
+app.get('/api/live-data', (req, res) => {
   const endpoint = req.query.endpoint;
   
   if (endpoint === 'ufc319') {
@@ -391,7 +391,7 @@ app.get('/live-data', (req, res) => {
   }
 });
 
-app.post('/live-data', (req, res) => {
+app.post('/api/live-data', (req, res) => {
   res.json({ 
     success: true, 
     message: 'Live data refreshed',
@@ -400,7 +400,7 @@ app.post('/live-data', (req, res) => {
 });
 
 // ESPN Live endpoints
-app.get('/espn-live', (req, res) => {
+app.get('/api/espn-live', (req, res) => {
   const endpoint = req.query.endpoint;
   const fightId = req.query.fightId;
   
@@ -444,7 +444,7 @@ app.get('/espn-live', (req, res) => {
   }
 });
 
-app.get('/v1/odds', (req, res) => {
+app.get('/api/v1/odds', (req, res) => {
   res.json({
     success: true,
     data: mockOdds,
@@ -469,7 +469,7 @@ app.get('/v1/odds', (req, res) => {
 });
 
 // Security endpoints
-app.get('/v1/security/metrics', (req, res) => {
+app.get('/api/v1/security/metrics', (req, res) => {
   res.json({
     success: true,
     data: {
@@ -487,7 +487,7 @@ app.get('/v1/security/metrics', (req, res) => {
   });
 });
 
-app.get('/v1/compliance', (req, res) => {
+app.get('/api/v1/compliance', (req, res) => {
   res.json({
     success: true,
     data: {
@@ -503,7 +503,7 @@ app.get('/v1/compliance', (req, res) => {
 });
 
 // Demo endpoint
-app.get('/v1/demo', (req, res) => {
+app.get('/api/v1/demo', (req, res) => {
   res.json({
     success: true,
     message: "UFC Prediction Platform - Live on Vercel!",
@@ -545,7 +545,7 @@ app.get('/v1/demo', (req, res) => {
 });
 
 // Additional API endpoints for comprehensive coverage
-app.get('/v1/events', (req, res) => {
+app.get('/api/v1/events', (req, res) => {
   res.json({
     success: true,
     data: [
@@ -566,7 +566,7 @@ app.get('/v1/events', (req, res) => {
   });
 });
 
-app.get('/v1/analytics', (req, res) => {
+app.get('/api/v1/analytics', (req, res) => {
   res.json({
     success: true,
     data: {
@@ -584,7 +584,7 @@ app.get('/v1/analytics', (req, res) => {
   });
 });
 
-app.get('/v1/status', (req, res) => {
+app.get('/api/v1/status', (req, res) => {
   res.json({
     success: true,
     status: 'operational',
