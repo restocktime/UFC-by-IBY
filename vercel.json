@@ -6,6 +6,12 @@
     },
     "api/index.js": {
       "maxDuration": 30
+    },
+    "api/fighters.js": {
+      "maxDuration": 30
+    },
+    "api/predictions.js": {
+      "maxDuration": 30
     }
   },
   "routes": [
@@ -14,12 +20,96 @@
       "dest": "/api/health.js"
     },
     {
+      "src": "/api/v1/fighters",
+      "dest": "/api/index.js",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/v1/fighters/([^/]+)",
+      "dest": "/api/index.js",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/v1/predictions",
+      "dest": "/api/index.js",
+      "methods": ["GET", "POST"]
+    },
+    {
+      "src": "/api/v1/predictions/([^/]+)",
+      "dest": "/api/index.js",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/v1/odds",
+      "dest": "/api/index.js",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/v1/security/metrics",
+      "dest": "/api/index.js",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/v1/compliance",
+      "dest": "/api/index.js",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/v1/demo",
+      "dest": "/api/index.js",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/v1/events",
+      "dest": "/api/index.js",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/v1/analytics",
+      "dest": "/api/index.js",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/v1/status",
+      "dest": "/api/index.js",
+      "methods": ["GET"]
+    },
+    {
+      "src": "/api/live-data",
+      "dest": "/api/index.js",
+      "methods": ["GET", "POST"]
+    },
+    {
+      "src": "/api/espn-live",
+      "dest": "/api/index.js",
+      "methods": ["GET"]
+    },
+    {
       "src": "/api/v1/(.*)",
       "dest": "/api/index.js"
     },
     {
       "src": "/api/(.*)",
       "dest": "/api/index.js"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
+      ]
     }
   ]
 }
