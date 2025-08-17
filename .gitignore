@@ -53,11 +53,10 @@ models/
 
 # Vercel deployment artifacts
 .vercel/
-index.html
-manifest.json
-sw.js
 
 # Files copied during vercel-build (should not be committed from root)
+# But allow root index.html for Vercel deployment
+!/index.html
 !/packages/frontend/public/index.html
 !/packages/frontend/public/manifest.json
 !/packages/frontend/public/sw.js
