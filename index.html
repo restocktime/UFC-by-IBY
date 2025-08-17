@@ -560,7 +560,7 @@
             showResults('<div class="loading">🔴 Loading UFC 319 live data...</div>');
             
             try {
-                const response = await fetch(`${API_BASE}/live/event/ufc319`);
+                const response = await fetch('/api/live-data?endpoint=ufc319');
                 const data = await response.json();
                 
                 const content = `
@@ -605,7 +605,7 @@
             showResults('<div class="loading">💰 Loading live odds...</div>');
             
             try {
-                const response = await fetch(`${API_BASE}/live/odds/live`);
+                const response = await fetch('/api/espn-live?endpoint=odds');
                 const data = await response.json();
                 
                 const content = `
@@ -645,7 +645,7 @@
             showResults('<div class="loading">📊 Analyzing betting opportunities...</div>');
             
             try {
-                const response = await fetch(`${API_BASE}/live/analysis/${fightId}`);
+                const response = await fetch(`/api/espn-live?endpoint=analysis&fightId=${fightId}`);
                 const analysis = await response.json();
                 
                 const content = `
@@ -694,7 +694,7 @@
             showResults('<div class="loading">🔄 Refreshing live data...</div>');
             
             try {
-                const response = await fetch(`${API_BASE}/live/refresh`, { method: 'POST' });
+                const response = await fetch('/api/live-data?endpoint=refresh', { method: 'POST' });
                 const result = await response.json();
                 
                 if (result.success) {
@@ -826,10 +826,13 @@
             
             const tests = [
                 { name: 'Health Check', url: '/api/health' },
-                { name: 'Demo Endpoint', url: '/api/v1/demo' },
-                { name: 'Fighters', url: '/api/v1/fighters' },
-                { name: 'Predictions', url: '/api/v1/predictions' },
-                { name: 'Odds', url: '/api/v1/odds' }
+                { name: 'Demo Endpoint', url: '/api/demo' },
+                { name: 'Fighters', url: '/api/fighters' },
+                { name: 'Predictions', url: '/api/predictions' },
+                { name: 'Odds', url: '/api/odds' },
+                { name: 'Live Data (UFC 319)', url: '/api/live-data?endpoint=ufc319' },
+                { name: 'ESPN Live', url: '/api/espn-live?endpoint=live' },
+                { name: 'Live Odds', url: '/api/espn-live?endpoint=odds' }
             ];
             
             let results = '<h4>🧪 Live API Test Results</h4>';
