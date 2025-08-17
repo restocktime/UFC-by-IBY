@@ -68,10 +68,10 @@ export class EncryptionService {
         salt = crypto.randomBytes(this.config.saltLength);
         key = this.deriveKey(salt);
       } else {
-        key = Buffer.from(this.masterKey, 'hex');
+        key = Buffer.from(this.masterKey.length === 64 ? this.masterKey : this.masterKey.padEnd(64, '0'), 'hex').slice(0, 32);
       }
 
-      const cipher = crypto.createCipher(this.config.algorithm, key);
+      const cipher = crypto.createCipheriv(this.config.algorithm, key, iv);
 
       let encrypted = cipher.update(plaintext, 'utf8', 'hex');
       encrypted += cipher.final('hex');
@@ -93,15 +93,16 @@ export class EncryptionService {
   decrypt(encryptedData: EncryptedData): string {
     try {
       let key: Buffer;
+      const iv = Buffer.from(encryptedData.iv, 'hex');
 
       if (encryptedData.salt) {
         const salt = Buffer.from(encryptedData.salt, 'hex');
         key = this.deriveKey(salt);
       } else {
-        key = Buffer.from(this.masterKey, 'hex');
+        key = Buffer.from(this.masterKey.length === 64 ? this.masterKey : this.masterKey.padEnd(64, '0'), 'hex').slice(0, 32);
       }
 
-      const decipher = crypto.createDecipher(this.config.algorithm, key);
+      const decipher = crypto.createDecipheriv(this.config.algorithm, key, iv);
 
       let decrypted = decipher.update(encryptedData.encrypted, 'hex', 'utf8');
       decrypted += decipher.final('utf8');

@@ -9,6 +9,11 @@
     "start": "node dist/index.js",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:integration": "vitest run src/__tests__/integration --config ../../vitest.integration.config.ts",
+    "test:e2e": "vitest run src/__tests__/e2e --config ../../vitest.integration.config.ts",
+    "test:performance": "vitest run src/__tests__/performance --config ../../vitest.integration.config.ts",
+    "test:chaos": "vitest run src/__tests__/chaos --config ../../vitest.integration.config.ts",
     "lint": "eslint src --ext .ts",
     "clean": "rm -rf dist"
   },
@@ -39,9 +44,11 @@
     "tsx": "^3.12.0",
     "typescript": "^5.1.0",
     "vitest": "^0.34.0",
+    "@vitest/coverage-v8": "^0.34.0",
     "supertest": "^6.3.0",
     "@types/supertest": "^2.0.0",
     "@types/bcrypt": "^5.0.0",
-    "@types/jsonwebtoken": "^9.0.0"
+    "@types/jsonwebtoken": "^9.0.0",
+    "mongodb-memory-server": "^8.15.0"
   }
 }

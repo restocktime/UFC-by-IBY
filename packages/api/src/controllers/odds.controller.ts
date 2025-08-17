@@ -5,6 +5,8 @@
 import { Request, Response } from 'express';
 import { OddsRepository } from '../repositories/odds.repository.js';
 import { DatabaseManager } from '../database/manager.js';
+import { OddsAggregationService, MarketAnalysis } from '../services/odds-aggregation.service.js';
+import { MarketAnalysisService, ComprehensiveMarketAnalysis } from '../services/market-analysis.service.js';
 
 export interface OddsMovement {
   id: string;
@@ -82,9 +84,25 @@ export interface MarketAnalysis {
 
 export class OddsController {
   private oddsRepository: OddsRepository;
+  private aggregationService: OddsAggregationService;
+  private marketAnalysisService: MarketAnalysisService;
 
   constructor(dbManager: DatabaseManager) {
     this.oddsRepository = new OddsRepository(dbManager);
+    this.aggregationService = new OddsAggregationService({
+      enableRealTimeUpdates: true,
+      prioritySportsbooks: ['draftkings', 'fanduel', 'betmgm', 'hardrockbet'],
+      arbitrageThreshold: 1.5
+    });
+    this.marketAnalysisService = new MarketAnalysisService({
+      enableH2HAnalysis: true,
+      enableMethodAnalysis: true,
+      enableRoundAnalysis: true,
+      enablePropAnalysis: true,
+      enableCrossMarketArbitrage: true,
+      minArbitrageProfit: 1.5,
+      analysisDepth: 'comprehensive'
+    });
   }
 
   /**
@@ -427,6 +445,560 @@ export class OddsController {
       res.status(500).json({
         error: 'Internal server error',
         message: 'Failed to compare odds'
+      });
+    }
+  }
+
+  /**
+   * Sync multi-sportsbook odds for a specific fight
+   * POST /api/v1/odds/:fightId/sync
+   */
+  async syncMultiSportsbookOdds(req: Request, res: Response): Promise<void> {
+    try {
+      const { fightId } = req.params;
+
+      if (!fightId || typeof fightId !== 'string') {
+        res.status(400).json({
+          error: 'Invalid fight ID',
+          message: 'Fight ID must be a valid string'
+        });
+        return;
+      }
+
+      const analysis = await this.aggregationService.syncSpecificFight(fightId);
+
+      res.json({
+        success: true,
+        fightId,
+        analysis,
+        timestamp: new Date()
+      });
+
+    } catch (error) {
+      console.error('Error syncing multi-sportsbook odds:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to sync multi-sportsbook odds'
+      });
+    }
+  }
+
+  /**
+   * Get comprehensive market analysis
+   * GET /api/v1/odds/:fightId/market-analysis
+   */
+  async getComprehensiveMarketAnalysis(req: Request, res: Response): Promise<void> {
+    try {
+      const { fightId } = req.params;
+
+      if (!fightId || typeof fightId !== 'string') {
+        res.status(400).json({
+          error: 'Invalid fight ID',
+          message: 'Fight ID must be a valid string'
+        });
+        return;
+      }
+
+      const analysis = await this.aggregationService.generateMarketAnalysis(fightId);
+
+      res.json({
+        fightId,
+        analysis,
+        timestamp: new Date()
+      });
+
+    } catch (error) {
+      console.error('Error generating comprehensive market analysis:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to generate comprehensive market analysis'
+      });
+    }
+  }
+
+  /**
+   * Get sportsbook coverage information
+   * GET /api/v1/odds/sportsbooks/coverage
+   */
+  async getSportsbookCoverage(req: Request, res: Response): Promise<void> {
+    try {
+      const coverage = await this.aggregationService.getSportsbookCoverage();
+
+      res.json({
+        coverage,
+        timestamp: new Date(),
+        count: coverage.length
+      });
+
+    } catch (error) {
+      console.error('Error fetching sportsbook coverage:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to fetch sportsbook coverage'
+      });
+    }
+  }
+
+  /**
+   * Get live arbitrage opportunities across all sportsbooks
+   * GET /api/v1/odds/arbitrage/live
+   */
+  async getLiveArbitrageOpportunities(req: Request, res: Response): Promise<void> {
+    try {
+      const { 
+        minProfit = '1.5',
+        limit = '20'
+      } = req.query;
+
+      const minProfitNum = parseFloat(minProfit as string);
+      const limitNum = parseInt(limit as string, 10);
+
+      if (isNaN(minProfitNum) || minProfitNum < 0 || minProfitNum > 20) {
+        res.status(400).json({
+          error: 'Invalid minimum profit',
+          message: 'Minimum profit must be between 0 and 20 percent'
+        });
+        return;
+      }
+
+      if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+        res.status(400).json({
+          error: 'Invalid limit',
+          message: 'Limit must be between 1 and 100'
+        });
+        return;
+      }
+
+      const opportunities = await this.aggregationService.getArbitrageOpportunities(minProfitNum);
+      const limitedOpportunities = opportunities.slice(0, limitNum);
+
+      res.json({
+        opportunities: limitedOpportunities,
+        filters: {
+          minProfit: minProfitNum,
+          limit: limitNum
+        },
+        timestamp: new Date(),
+        count: limitedOpportunities.length,
+        totalAvailable: opportunities.length
+      });
+
+    } catch (error) {
+      console.error('Error fetching live arbitrage opportunities:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to fetch live arbitrage opportunities'
+      });
+    }
+  }
+
+  /**
+   * Trigger full odds aggregation sync
+   * POST /api/v1/odds/sync/full
+   */
+  async triggerFullSync(req: Request, res: Response): Promise<void> {
+    try {
+      await this.aggregationService.performFullSync();
+
+      res.json({
+        success: true,
+        message: 'Full odds sync completed successfully',
+        timestamp: new Date()
+      });
+
+    } catch (error) {
+      console.error('Error triggering full sync:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to trigger full sync'
+      });
+    }
+  }
+
+  /**
+   * Update aggregation service configuration
+   * PUT /api/v1/odds/config
+   */
+  async updateAggregationConfig(req: Request, res: Response): Promise<void> {
+    try {
+      const {
+        updateInterval,
+        prioritySportsbooks,
+        arbitrageThreshold,
+        minSportsbooksRequired
+      } = req.body;
+
+      const config: any = {};
+
+      if (updateInterval !== undefined) {
+        if (typeof updateInterval !== 'number' || updateInterval < 1 || updateInterval > 60) {
+          res.status(400).json({
+            error: 'Invalid update interval',
+            message: 'Update interval must be between 1 and 60 minutes'
+          });
+          return;
+        }
+        config.updateInterval = updateInterval;
+      }
+
+      if (prioritySportsbooks !== undefined) {
+        if (!Array.isArray(prioritySportsbooks)) {
+          res.status(400).json({
+            error: 'Invalid priority sportsbooks',
+            message: 'Priority sportsbooks must be an array'
+          });
+          return;
+        }
+        config.prioritySportsbooks = prioritySportsbooks;
+      }
+
+      if (arbitrageThreshold !== undefined) {
+        if (typeof arbitrageThreshold !== 'number' || arbitrageThreshold < 0 || arbitrageThreshold > 10) {
+          res.status(400).json({
+            error: 'Invalid arbitrage threshold',
+            message: 'Arbitrage threshold must be between 0 and 10 percent'
+          });
+          return;
+        }
+        config.arbitrageThreshold = arbitrageThreshold;
+      }
+
+      if (minSportsbooksRequired !== undefined) {
+        if (typeof minSportsbooksRequired !== 'number' || minSportsbooksRequired < 1 || minSportsbooksRequired > 20) {
+          res.status(400).json({
+            error: 'Invalid minimum sportsbooks required',
+            message: 'Minimum sportsbooks required must be between 1 and 20'
+          });
+          return;
+        }
+        config.minSportsbooksRequired = minSportsbooksRequired;
+      }
+
+      this.aggregationService.updateConfiguration(config);
+
+      res.json({
+        success: true,
+        message: 'Configuration updated successfully',
+        config,
+        timestamp: new Date()
+      });
+
+    } catch (error) {
+      console.error('Error updating aggregation config:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to update aggregation config'
+      });
+    }
+  }
+
+  /**
+   * Get expanded market coverage analysis
+   * GET /api/v1/odds/markets/coverage
+   */
+  async getExpandedMarketCoverage(req: Request, res: Response): Promise<void> {
+    try {
+      const { eventId } = req.query;
+
+      const analysis = await this.marketAnalysisService.generateComprehensiveAnalysis(
+        eventId as string
+      );
+
+      res.json({
+        success: true,
+        analysis,
+        timestamp: new Date()
+      });
+
+    } catch (error) {
+      console.error('Error getting expanded market coverage:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to get expanded market coverage'
+      });
+    }
+  }
+
+  /**
+   * Get H2H market analysis
+   * GET /api/v1/odds/markets/h2h/analysis
+   */
+  async getH2HMarketAnalysis(req: Request, res: Response): Promise<void> {
+    try {
+      const { eventId } = req.query;
+
+      const analysis = await this.marketAnalysisService.generateH2HAnalysis(
+        eventId as string
+      );
+
+      res.json({
+        success: true,
+        analysis,
+        timestamp: new Date()
+      });
+
+    } catch (error) {
+      console.error('Error getting H2H market analysis:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to get H2H market analysis'
+      });
+    }
+  }
+
+  /**
+   * Get method of victory market analysis
+   * GET /api/v1/odds/markets/method/analysis
+   */
+  async getMethodMarketAnalysis(req: Request, res: Response): Promise<void> {
+    try {
+      const { eventId } = req.query;
+
+      const analysis = await this.marketAnalysisService.generateMethodAnalysis(
+        eventId as string
+      );
+
+      res.json({
+        success: true,
+        analysis,
+        timestamp: new Date()
+      });
+
+    } catch (error) {
+      console.error('Error getting method market analysis:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to get method market analysis'
+      });
+    }
+  }
+
+  /**
+   * Get round betting market analysis
+   * GET /api/v1/odds/markets/rounds/analysis
+   */
+  async getRoundMarketAnalysis(req: Request, res: Response): Promise<void> {
+    try {
+      const { eventId } = req.query;
+
+      const analysis = await this.marketAnalysisService.generateRoundAnalysis(
+        eventId as string
+      );
+
+      res.json({
+        success: true,
+        analysis,
+        timestamp: new Date()
+      });
+
+    } catch (error) {
+      console.error('Error getting round market analysis:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to get round market analysis'
+      });
+    }
+  }
+
+  /**
+   * Get prop betting market analysis
+   * GET /api/v1/odds/markets/props/analysis
+   */
+  async getPropMarketAnalysis(req: Request, res: Response): Promise<void> {
+    try {
+      const { eventId } = req.query;
+
+      const analysis = await this.marketAnalysisService.generatePropAnalysis(
+        eventId as string
+      );
+
+      res.json({
+        success: true,
+        analysis,
+        timestamp: new Date()
+      });
+
+    } catch (error) {
+      console.error('Error getting prop market analysis:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to get prop market analysis'
+      });
+    }
+  }
+
+  /**
+   * Get cross-market arbitrage opportunities
+   * GET /api/v1/odds/markets/arbitrage/cross-market
+   */
+  async getCrossMarketArbitrage(req: Request, res: Response): Promise<void> {
+    try {
+      const { 
+        eventId,
+        minProfit = '2.0',
+        marketTypes
+      } = req.query;
+
+      const minProfitNum = parseFloat(minProfit as string);
+
+      if (isNaN(minProfitNum) || minProfitNum < 0 || minProfitNum > 20) {
+        res.status(400).json({
+          error: 'Invalid minimum profit',
+          message: 'Minimum profit must be between 0 and 20 percent'
+        });
+        return;
+      }
+
+      const opportunities = await this.marketAnalysisService.findCrossMarketArbitrage(
+        eventId as string
+      );
+
+      // Filter by market types if specified
+      let filteredOpportunities = opportunities;
+      if (marketTypes) {
+        const types = (marketTypes as string).split(',');
+        filteredOpportunities = opportunities.filter(opp => 
+          types.includes(opp.type)
+        );
+      }
+
+      // Filter by minimum profit
+      filteredOpportunities = filteredOpportunities.filter(opp => 
+        opp.profit >= minProfitNum
+      );
+
+      res.json({
+        success: true,
+        opportunities: filteredOpportunities,
+        filters: {
+          eventId,
+          minProfit: minProfitNum,
+          marketTypes: marketTypes ? (marketTypes as string).split(',') : undefined
+        },
+        timestamp: new Date(),
+        count: filteredOpportunities.length
+      });
+
+    } catch (error) {
+      console.error('Error getting cross-market arbitrage:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to get cross-market arbitrage opportunities'
+      });
+    }
+  }
+
+  /**
+   * Get market trends analysis
+   * GET /api/v1/odds/markets/trends
+   */
+  async getMarketTrends(req: Request, res: Response): Promise<void> {
+    try {
+      const { timeframe = '24h' } = req.query;
+
+      const validTimeframes = ['1h', '6h', '24h', '7d'];
+      if (!validTimeframes.includes(timeframe as string)) {
+        res.status(400).json({
+          error: 'Invalid timeframe',
+          message: `Valid timeframes: ${validTimeframes.join(', ')}`
+        });
+        return;
+      }
+
+      const trends = await this.marketAnalysisService.analyzeMarketTrends(
+        timeframe as '1h' | '6h' | '24h' | '7d'
+      );
+
+      res.json({
+        success: true,
+        trends,
+        timestamp: new Date()
+      });
+
+    } catch (error) {
+      console.error('Error getting market trends:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to get market trends'
+      });
+    }
+  }
+
+  /**
+   * Update market analysis configuration
+   * PUT /api/v1/odds/markets/config
+   */
+  async updateMarketAnalysisConfig(req: Request, res: Response): Promise<void> {
+    try {
+      const {
+        enableH2HAnalysis,
+        enableMethodAnalysis,
+        enableRoundAnalysis,
+        enablePropAnalysis,
+        enableCrossMarketArbitrage,
+        minArbitrageProfit,
+        analysisDepth
+      } = req.body;
+
+      const config: any = {};
+
+      if (enableH2HAnalysis !== undefined) {
+        config.enableH2HAnalysis = Boolean(enableH2HAnalysis);
+      }
+
+      if (enableMethodAnalysis !== undefined) {
+        config.enableMethodAnalysis = Boolean(enableMethodAnalysis);
+      }
+
+      if (enableRoundAnalysis !== undefined) {
+        config.enableRoundAnalysis = Boolean(enableRoundAnalysis);
+      }
+
+      if (enablePropAnalysis !== undefined) {
+        config.enablePropAnalysis = Boolean(enablePropAnalysis);
+      }
+
+      if (enableCrossMarketArbitrage !== undefined) {
+        config.enableCrossMarketArbitrage = Boolean(enableCrossMarketArbitrage);
+      }
+
+      if (minArbitrageProfit !== undefined) {
+        if (typeof minArbitrageProfit !== 'number' || minArbitrageProfit < 0 || minArbitrageProfit > 20) {
+          res.status(400).json({
+            error: 'Invalid minimum arbitrage profit',
+            message: 'Minimum arbitrage profit must be between 0 and 20 percent'
+          });
+          return;
+        }
+        config.minArbitrageProfit = minArbitrageProfit;
+      }
+
+      if (analysisDepth !== undefined) {
+        const validDepths = ['basic', 'detailed', 'comprehensive'];
+        if (!validDepths.includes(analysisDepth)) {
+          res.status(400).json({
+            error: 'Invalid analysis depth',
+            message: `Valid analysis depths: ${validDepths.join(', ')}`
+          });
+          return;
+        }
+        config.analysisDepth = analysisDepth;
+      }
+
+      this.marketAnalysisService.updateConfiguration(config);
+
+      res.json({
+        success: true,
+        message: 'Market analysis configuration updated successfully',
+        config,
+        timestamp: new Date()
+      });
+
+    } catch (error) {
+      console.error('Error updating market analysis config:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        message: 'Failed to update market analysis config'
       });
     }
   }

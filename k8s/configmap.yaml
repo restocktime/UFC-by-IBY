@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ufc-platform-config
+  namespace: ufc-platform
+data:
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+  API_PORT: "3000"
+  ML_PORT: "3001"
+  FRONTEND_PORT: "80"
+  
+  # Database configurations (non-sensitive)
+  MONGODB_DATABASE: "ufc_platform"
+  REDIS_DATABASE: "0"
+  INFLUXDB_ORG: "ufc-platform"
+  INFLUXDB_BUCKET: "metrics"
+  
+  # API configurations
+  API_RATE_LIMIT_WINDOW: "900000"  # 15 minutes
+  API_RATE_LIMIT_MAX: "100"
+  
+  # ML configurations
+  MODEL_CACHE_TTL: "3600"  # 1 hour
+  PREDICTION_BATCH_SIZE: "32"
+  
+  # Monitoring
+  METRICS_ENABLED: "true"
+  HEALTH_CHECK_INTERVAL: "30"

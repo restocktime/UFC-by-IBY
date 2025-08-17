@@ -9,7 +9,16 @@
   "scripts": {
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:integration:watch": "vitest --config vitest.integration.config.ts",
+    "test:e2e": "vitest run packages/api/src/__tests__/e2e --config vitest.integration.config.ts",
+    "test:performance": "vitest run packages/api/src/__tests__/performance --config vitest.integration.config.ts",
+    "test:chaos": "vitest run packages/api/src/__tests__/chaos --config vitest.integration.config.ts",
+    "test:ci": "vitest run packages/api/src/__tests__/ci --config vitest.integration.config.ts",
+    "test:all": "npm run test && npm run test:integration",
     "lint": "npm run lint --workspaces",
+    "format:check": "prettier --check .",
+    "format": "prettier --write .",
     "dev": "npm run dev --workspaces --if-present",
     "clean": "npm run clean --workspaces --if-present"
   },
@@ -21,7 +30,11 @@
     "eslint-plugin-prettier": "^5.0.0",
     "prettier": "^3.0.0",
     "typescript": "^5.1.0",
-    "vitest": "^0.34.0"
+    "vitest": "^0.34.0",
+    "@vitest/coverage-v8": "^0.34.0",
+    "mongodb-memory-server": "^8.15.0",
+    "supertest": "^6.3.0",
+    "@types/supertest": "^2.0.12"
   },
   "engines": {
     "node": ">=18.0.0",

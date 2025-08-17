@@ -1,0 +1,139 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-deployment
+  namespace: ufc-platform
+  labels:
+    app: ufc-ml
+    version: v1
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ufc-ml
+  template:
+    metadata:
+      labels:
+        app: ufc-ml
+        version: v1
+    spec:
+      containers:
+      - name: ml
+        image: ufc-platform/ml:latest
+        ports:
+        - containerPort: 3001
+          name: http
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: ufc-platform-config
+              key: ML_PORT
+        - name: NODE_ENV
+          valueFrom:
+            configMapKeyRef:
+              name: ufc-platform-config
+              key: NODE_ENV
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: ufc-platform-config
+              key: LOG_LEVEL
+        - name: MODEL_CACHE_TTL
+          valueFrom:
+            configMapKeyRef:
+              name: ufc-platform-config
+              key: MODEL_CACHE_TTL
+        - name: PREDICTION_BATCH_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: ufc-platform-config
+              key: PREDICTION_BATCH_SIZE
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 3001
+          initialDelaySeconds: 30
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 1001
+          allowPrivilegeEscalation: false
+          readOnlyRootFilesystem: true
+          capabilities:
+            drop:
+            - ALL
+        volumeMounts:
+        - name: tmp
+          mountPath: /tmp
+        - name: model-cache
+          mountPath: /app/models
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: model-cache
+        emptyDir:
+          sizeLimit: 1Gi
+      securityContext:
+        fsGroup: 1001
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ml-service
+  namespace: ufc-platform
+  labels:
+    app: ufc-ml
+spec:
+  selector:
+    app: ufc-ml
+  ports:
+  - name: http
+    port: 3001
+    targetPort: 3001
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: ml-hpa
+  namespace: ufc-platform
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: ml-deployment
+  minReplicas: 2
+  maxReplicas: 8
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

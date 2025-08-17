@@ -29,3 +29,21 @@ export {
   OddsTracker,
   AlertSettings
 } from './odds';
+
+// Dashboard components
+export {
+  LiveDashboard,
+  LiveFightMonitor,
+  BettingOpportunityAlerts,
+  CustomWatchlist
+} from './dashboard';
+
+// Mobile components
+export {
+  MobileBettingTools,
+  QuickBetAnalyzer,
+  BettingCalculator,
+  OfflineAnalyses,
+  PushNotificationManager,
+  MobileOddsComparison
+} from './mobile';

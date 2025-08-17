@@ -61,12 +61,15 @@ export const API_SOURCES: Record<string, APISourceConfig> = {
   ESPN_API: {
     name: 'ESPN API',
     description: 'ESPN sports data for UFC events and fighter information',
-    baseUrl: 'https://site.web.api.espn.com/apis/personalized/v2',
+    baseUrl: 'https://site.web.api.espn.com/apis/site/v2/sports/mma/ufc',
     authType: 'none',
     endpoints: {
-      scoreboard: '/scoreboard/header',
-      events: '/scoreboard/header',
-      fighters: '/athletes'
+      scoreboard: '/scoreboard',
+      events: '/events',
+      fighters: '/athletes',
+      rankings: '/athletes/rankings',
+      eventSummary: '/summary',
+      liveScoreboard: '/scoreboard'
     },
     rateLimit: {
       requestsPerMinute: 60,

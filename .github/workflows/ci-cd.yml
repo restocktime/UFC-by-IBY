@@ -1,0 +1,312 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      mongodb:
+        image: mongo:6.0
+        env:
+          MONGO_INITDB_ROOT_USERNAME: test
+          MONGO_INITDB_ROOT_PASSWORD: test
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      influxdb:
+        image: influxdb:2.7
+        env:
+          DOCKER_INFLUXDB_INIT_MODE: setup
+          DOCKER_INFLUXDB_INIT_USERNAME: test
+          DOCKER_INFLUXDB_INIT_PASSWORD: testpassword
+          DOCKER_INFLUXDB_INIT_ORG: test-org
+          DOCKER_INFLUXDB_INIT_BUCKET: test-bucket
+          DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: test-token
+        ports:
+          - 8086:8086
+
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run linting
+      run: npm run lint
+
+    - name: Run formatting check
+      run: npm run format:check
+
+    - name: Run unit tests
+      run: npm run test
+      env:
+        NODE_ENV: test
+
+    - name: Run integration tests
+      run: npm run test:integration
+      env:
+        NODE_ENV: test
+        MONGODB_URI: mongodb://test:test@localhost:27017/test?authSource=admin
+        REDIS_URL: redis://localhost:6379/1
+        INFLUXDB_URL: http://localhost:8086
+        INFLUXDB_TOKEN: test-token
+
+    - name: Run performance tests
+      run: npm run test:performance
+      env:
+        NODE_ENV: test
+        MONGODB_URI: mongodb://test:test@localhost:27017/test?authSource=admin
+        REDIS_URL: redis://localhost:6379/1
+
+    - name: Run security audit
+      run: npm audit --audit-level=high
+
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        files: ./coverage/lcov.info
+        flags: unittests
+        name: codecov-umbrella
+
+  build:
+    name: Build and Push Images
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    permissions:
+      contents: read
+      packages: write
+
+    strategy:
+      matrix:
+        service: [api, frontend, ml]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./packages/${{ matrix.service }}/Dockerfile
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        platforms: linux/amd64,linux/arm64
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    strategy:
+      matrix:
+        service: [api, frontend, ml]
+
+    steps:
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/${{ matrix.service }}:latest
+        format: 'sarif'
+        output: 'trivy-results-${{ matrix.service }}.sarif'
+
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results-${{ matrix.service }}.sarif'
+
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [test, build, security-scan]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: staging
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+
+    - name: Deploy to staging
+      run: |
+        export KUBECONFIG=kubeconfig
+        
+        # Update image tags in manifests
+        sed -i "s|ufc-platform/api:latest|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:${{ github.sha }}|g" k8s/api-deployment.yaml
+        sed -i "s|ufc-platform/frontend:latest|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:${{ github.sha }}|g" k8s/frontend-deployment.yaml
+        sed -i "s|ufc-platform/ml:latest|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/ml:${{ github.sha }}|g" k8s/ml-deployment.yaml
+        
+        # Apply manifests
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/configmap.yaml
+        kubectl apply -f k8s/secrets.yaml
+        kubectl apply -f k8s/api-deployment.yaml
+        kubectl apply -f k8s/frontend-deployment.yaml
+        kubectl apply -f k8s/ml-deployment.yaml
+        kubectl apply -f k8s/ingress.yaml
+        
+        # Wait for rollout
+        kubectl rollout status deployment/api-deployment -n ufc-platform --timeout=300s
+        kubectl rollout status deployment/frontend-deployment -n ufc-platform --timeout=300s
+        kubectl rollout status deployment/ml-deployment -n ufc-platform --timeout=300s
+
+    - name: Run deployment tests
+      run: |
+        export KUBECONFIG=kubeconfig
+        
+        # Wait for services to be ready
+        kubectl wait --for=condition=ready pod -l app=ufc-api -n ufc-platform --timeout=300s
+        kubectl wait --for=condition=ready pod -l app=ufc-frontend -n ufc-platform --timeout=300s
+        kubectl wait --for=condition=ready pod -l app=ufc-ml -n ufc-platform --timeout=300s
+        
+        # Run health checks
+        kubectl exec -n ufc-platform deployment/api-deployment -- curl -f http://localhost:3000/health
+        kubectl exec -n ufc-platform deployment/frontend-deployment -- curl -f http://localhost/health
+        kubectl exec -n ufc-platform deployment/ml-deployment -- curl -f http://localhost:3001/health
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: deploy-staging
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.28.0'
+
+    - name: Configure kubectl
+      run: |
+        echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > kubeconfig
+        export KUBECONFIG=kubeconfig
+
+    - name: Deploy to production
+      run: |
+        export KUBECONFIG=kubeconfig
+        
+        # Update image tags in manifests
+        sed -i "s|ufc-platform/api:latest|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/api:${{ github.sha }}|g" k8s/api-deployment.yaml
+        sed -i "s|ufc-platform/frontend:latest|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/frontend:${{ github.sha }}|g" k8s/frontend-deployment.yaml
+        sed -i "s|ufc-platform/ml:latest|${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/ml:${{ github.sha }}|g" k8s/ml-deployment.yaml
+        
+        # Apply manifests with rolling update
+        kubectl apply -f k8s/namespace.yaml
+        kubectl apply -f k8s/configmap.yaml
+        kubectl apply -f k8s/secrets.yaml
+        kubectl apply -f k8s/api-deployment.yaml
+        kubectl apply -f k8s/frontend-deployment.yaml
+        kubectl apply -f k8s/ml-deployment.yaml
+        kubectl apply -f k8s/ingress.yaml
+        
+        # Wait for rollout with longer timeout for production
+        kubectl rollout status deployment/api-deployment -n ufc-platform --timeout=600s
+        kubectl rollout status deployment/frontend-deployment -n ufc-platform --timeout=600s
+        kubectl rollout status deployment/ml-deployment -n ufc-platform --timeout=600s
+
+    - name: Run production health checks
+      run: |
+        export KUBECONFIG=kubeconfig
+        
+        # Wait for services to be ready
+        kubectl wait --for=condition=ready pod -l app=ufc-api -n ufc-platform --timeout=600s
+        kubectl wait --for=condition=ready pod -l app=ufc-frontend -n ufc-platform --timeout=600s
+        kubectl wait --for=condition=ready pod -l app=ufc-ml -n ufc-platform --timeout=600s
+        
+        # Run comprehensive health checks
+        kubectl exec -n ufc-platform deployment/api-deployment -- curl -f http://localhost:3000/health/detailed
+        kubectl exec -n ufc-platform deployment/frontend-deployment -- curl -f http://localhost/health
+        kubectl exec -n ufc-platform deployment/ml-deployment -- curl -f http://localhost:3001/health
+
+    - name: Notify deployment success
+      if: success()
+      run: |
+        echo "✅ Production deployment successful!"
+        echo "API: https://api.ufc-platform.example.com"
+        echo "Frontend: https://ufc-platform.example.com"
+
+    - name: Rollback on failure
+      if: failure()
+      run: |
+        export KUBECONFIG=kubeconfig
+        echo "❌ Deployment failed, initiating rollback..."
+        kubectl rollout undo deployment/api-deployment -n ufc-platform
+        kubectl rollout undo deployment/frontend-deployment -n ufc-platform
+        kubectl rollout undo deployment/ml-deployment -n ufc-platform
