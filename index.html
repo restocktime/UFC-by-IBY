@@ -340,7 +340,8 @@
             
             try {
                 const response = await fetch(`${API_BASE}/fighters`);
-                const fighters = await response.json();
+                const data = await response.json();
+                const fighters = data.data || [];
                 
                 const content = `
                     <h4>🥊 Fighter Database</h4>
@@ -367,8 +368,9 @@
             showResults('<div class="loading">💰 Loading odds...</div>');
             
             try {
-                const response = await fetch(`${API_BASE}/odds/fight/fight-1`);
-                const odds = await response.json();
+                const response = await fetch(`${API_BASE}/odds`);
+                const data = await response.json();
+                const odds = data.liveOdds?.data || [];
                 
                 const content = `
                     <h4>💰 Current Odds</h4>
@@ -418,7 +420,7 @@
             showResults('<div class="loading">⚖️ Comparing fighters...</div>');
             
             try {
-                const response = await fetch(`${API_BASE}/fighters/fighter-1/compare/fighter-2`);
+                const response = await fetch(`${API_BASE}/fighters`);
                 const comparison = await response.json();
                 
                 const content = `
@@ -456,7 +458,7 @@
             showResults('<div class="loading">📈 Loading odds movement...</div>');
             
             try {
-                const response = await fetch(`${API_BASE}/odds/movement/fight-1`);
+                const response = await fetch(`${API_BASE}/odds`);
                 const movement = await response.json();
                 
                 const content = `
@@ -497,7 +499,7 @@
             showResults('<div class="loading">📊 Loading prediction history...</div>');
             
             try {
-                const response = await fetch(`${API_BASE}/predictions/history/fight-1`);
+                const response = await fetch(`${API_BASE}/predictions`);
                 const data = await response.json();
                 
                 const content = `
