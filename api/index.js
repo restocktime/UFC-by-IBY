@@ -8,11 +8,12 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Mock data for live deployment
+// Enhanced mock data for live deployment
 const mockFighters = [
   {
     id: 1,
     name: "Jon Jones",
+    nickname: "Bones",
     record: "27-1-0",
     weightClass: "Heavyweight",
     ranking: 1,
@@ -24,6 +25,14 @@ const mockFighters = [
       submissions: 6,
       decisions: 11
     },
+    physicalStats: {
+      height: 76,
+      weight: 248,
+      reach: 84.5,
+      stance: "Orthodox"
+    },
+    nationality: "USA",
+    active: true,
     recentFights: [
       { opponent: "Ciryl Gane", result: "W", method: "Submission", round: 1 },
       { opponent: "Dominick Reyes", result: "W", method: "Decision", round: 5 }
@@ -32,6 +41,7 @@ const mockFighters = [
   {
     id: 2,
     name: "Alexander Volkanovski",
+    nickname: "The Great",
     record: "26-3-0",
     weightClass: "Featherweight",
     ranking: 1,
@@ -43,6 +53,14 @@ const mockFighters = [
       submissions: 1,
       decisions: 13
     },
+    physicalStats: {
+      height: 66,
+      weight: 145,
+      reach: 71.5,
+      stance: "Orthodox"
+    },
+    nationality: "Australia",
+    active: true,
     recentFights: [
       { opponent: "Ilia Topuria", result: "L", method: "KO", round: 2 },
       { opponent: "Max Holloway", result: "W", method: "Decision", round: 5 }
@@ -51,6 +69,7 @@ const mockFighters = [
   {
     id: 3,
     name: "Islam Makhachev",
+    nickname: "",
     record: "25-1-0",
     weightClass: "Lightweight",
     ranking: 1,
@@ -62,9 +81,101 @@ const mockFighters = [
       submissions: 11,
       decisions: 10
     },
+    physicalStats: {
+      height: 70,
+      weight: 155,
+      reach: 70,
+      stance: "Orthodox"
+    },
+    nationality: "Russia",
+    active: true,
     recentFights: [
       { opponent: "Dustin Poirier", result: "W", method: "Submission", round: 5 },
       { opponent: "Alexander Volkanovski", result: "W", method: "Decision", round: 5 }
+    ]
+  },
+  {
+    id: 4,
+    name: "Dricus Du Plessis",
+    nickname: "Stillknocks",
+    record: "21-2-0",
+    weightClass: "Middleweight",
+    ranking: 1,
+    stats: {
+      wins: 21,
+      losses: 2,
+      draws: 0,
+      koTko: 8,
+      submissions: 5,
+      decisions: 8
+    },
+    physicalStats: {
+      height: 73,
+      weight: 185,
+      reach: 76,
+      stance: "Southpaw"
+    },
+    nationality: "South Africa",
+    active: true,
+    recentFights: [
+      { opponent: "Sean Strickland", result: "W", method: "Decision", round: 5 },
+      { opponent: "Israel Adesanya", result: "W", method: "Submission", round: 4 }
+    ]
+  },
+  {
+    id: 5,
+    name: "Khamzat Chimaev",
+    nickname: "Borz",
+    record: "13-0-0",
+    weightClass: "Middleweight",
+    ranking: 3,
+    stats: {
+      wins: 13,
+      losses: 0,
+      draws: 0,
+      koTko: 7,
+      submissions: 4,
+      decisions: 2
+    },
+    physicalStats: {
+      height: 74,
+      weight: 185,
+      reach: 75,
+      stance: "Orthodox"
+    },
+    nationality: "Sweden",
+    active: true,
+    recentFights: [
+      { opponent: "Kamaru Usman", result: "W", method: "Decision", round: 3 },
+      { opponent: "Gilbert Burns", result: "W", method: "Decision", round: 3 }
+    ]
+  },
+  {
+    id: 6,
+    name: "Tom Aspinall",
+    nickname: "",
+    record: "15-3-0",
+    weightClass: "Heavyweight",
+    ranking: 2,
+    stats: {
+      wins: 15,
+      losses: 3,
+      draws: 0,
+      koTko: 9,
+      submissions: 4,
+      decisions: 2
+    },
+    physicalStats: {
+      height: 77,
+      weight: 248,
+      reach: 78,
+      stance: "Orthodox"
+    },
+    nationality: "England",
+    active: true,
+    recentFights: [
+      { opponent: "Sergei Pavlovich", result: "W", method: "KO", round: 1 },
+      { opponent: "Marcin Tybura", result: "W", method: "KO", round: 1 }
     ]
   }
 ];
