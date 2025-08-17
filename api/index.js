@@ -250,7 +250,7 @@ app.get('/', (req, res) => {
     timestamp: new Date().toISOString(),
     deployment: 'Vercel',
     status: 'OK',
-    version: '1.0.2',
+    version: '1.0.3',
     endpoints: {
       health: '/api/health',
       fighters: '/api/v1/fighters',
