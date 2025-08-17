@@ -11,8 +11,8 @@ async function fetchUFC319Data() {
         date: '2025-01-18T23:00:00Z',
         status: 'live',
         venue: {
-          name: 'Madison Square Garden',
-          city: 'New York, NY'
+          name: 'United Center',
+          city: 'Chicago, IL'
         },
         fights: [
           {
@@ -91,8 +91,8 @@ async function fetchUFC319Data() {
         date: new Date().toISOString(),
         status: 'upcoming',
         venue: {
-          name: 'Madison Square Garden',
-          city: 'New York, NY'
+          name: 'United Center',
+          city: 'Chicago, IL'
         },
         fights: [{
           id: 'main-event',
@@ -128,8 +128,8 @@ async function fetchLiveUFCEvents() {
           date: '2025-01-18T23:00:00Z',
           status: 'Live',
           venue: {
-            fullName: 'Madison Square Garden',
-            address: { city: 'New York, NY' }
+            fullName: 'United Center',
+            address: { city: 'Chicago, IL' }
           },
           competitors: [
             {
