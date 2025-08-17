@@ -3,16 +3,9 @@
   "version": "1.0.0",
   "description": "UFC Prediction Platform - AI-powered fight analytics and predictions",
   "private": true,
-  "workspaces": [],
   "scripts": {
-    "build": "echo 'Build complete'",
-    "start": "echo 'Serverless deployment - no start needed'"
+    "build": "echo 'Static site - no build needed'"
   },
-  "dependencies": {
-    "express": "^4.18.0",
-    "cors": "^2.8.5"
-  },
-  "devDependencies": {},
   "engines": {
     "node": ">=18.0.0",
     "npm": ">=9.0.0"
