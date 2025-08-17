@@ -36,16 +36,8 @@
       "dest": "/api/index.js"
     },
     {
-      "src": "/simple",
-      "dest": "/simple.html"
-    },
-    {
-      "src": "/test",
-      "dest": "/test.html"
-    },
-    {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/public/index.html"
     }
   ]
 }
