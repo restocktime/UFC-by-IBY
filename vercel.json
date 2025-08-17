@@ -6,12 +6,6 @@
     },
     "api/index.js": {
       "maxDuration": 30
-    },
-    "api/fighters.js": {
-      "maxDuration": 30
-    },
-    "api/predictions.js": {
-      "maxDuration": 30
     }
   },
   "routes": [
@@ -20,24 +14,12 @@
       "dest": "/api/health.js"
     },
     {
-      "src": "/api/v1/fighters",
-      "dest": "/api/index.js"
-    },
-    {
-      "src": "/api/v1/predictions",
-      "dest": "/api/index.js"
-    },
-    {
       "src": "/api/v1/(.*)",
       "dest": "/api/index.js"
     },
     {
       "src": "/api/(.*)",
       "dest": "/api/index.js"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/public/index.html"
     }
   ]
 }
