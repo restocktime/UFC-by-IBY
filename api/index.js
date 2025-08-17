@@ -185,12 +185,150 @@ app.get('/v1/predictions/:id', (req, res) => {
   res.json({ success: true, data: prediction });
 });
 
+// POST endpoint for predictions (expected by frontend)
+app.post('/v1/predictions', (req, res) => {
+  const { fightId, fighter1Id, fighter2Id, contextualData } = req.body;
+  
+  // Generate a mock prediction
+  const prediction = {
+    fightId: fightId || 'UFC-319-Main',
+    fighter1: { name: 'Dricus Du Plessis' },
+    fighter2: { name: 'Khamzat Chimaev' },
+    prediction: {
+      winnerProbability: {
+        fighter1: 0.523,
+        fighter2: 0.477
+      },
+      confidence: 0.785,
+      keyFactors: [
+        'Reach advantage analysis',
+        'Recent form evaluation', 
+        'Historical performance data',
+        'Venue and altitude considerations'
+      ],
+      methodProbability: {
+        ko: 0.352,
+        submission: 0.184,
+        decision: 0.464
+      }
+    }
+  };
+  
+  res.json(prediction);
+});
+
+// Live data endpoints
+app.get('/live-data', (req, res) => {
+  const endpoint = req.query.endpoint;
+  
+  if (endpoint === 'ufc319') {
+    res.json({
+      event: {
+        name: 'UFC 319: Du Plessis vs. Chimaev',
+        venue: {
+          name: 'United Center',
+          city: 'Chicago, IL'
+        },
+        date: new Date('2024-12-21').toISOString(),
+        status: 'live'
+      },
+      fights: [
+        {
+          id: 'main-event',
+          fighter1: { name: 'Dricus Du Plessis', record: '21-2-0', odds: -150 },
+          fighter2: { name: 'Khamzat Chimaev', record: '13-0-0', odds: +130 },
+          weightClass: 'Middleweight',
+          status: 'upcoming'
+        },
+        {
+          id: 'co-main',
+          fighter1: { name: 'Kai Kara-France', record: '24-10-0', odds: +110 },
+          fighter2: { name: 'Steve Erceg', record: '12-1-0', odds: -130 },
+          weightClass: 'Flyweight',
+          status: 'upcoming'
+        }
+      ],
+      lastUpdated: new Date().toISOString()
+    });
+  } else {
+    res.json({ message: 'Live data endpoint', endpoint, timestamp: new Date().toISOString() });
+  }
+});
+
+app.post('/live-data', (req, res) => {
+  res.json({ 
+    success: true, 
+    message: 'Live data refreshed',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// ESPN Live endpoints
+app.get('/espn-live', (req, res) => {
+  const endpoint = req.query.endpoint;
+  const fightId = req.query.fightId;
+  
+  if (endpoint === 'odds') {
+    res.json({
+      event: 'UFC 319: Du Plessis vs. Chimaev',
+      fights: [
+        {
+          fighter1: 'Dricus Du Plessis',
+          fighter2: 'Khamzat Chimaev',
+          odds: { fighter1: -150, fighter2: +130 },
+          liveOdds: [
+            { sportsbook: 'DraftKings' },
+            { sportsbook: 'FanDuel' },
+            { sportsbook: 'BetMGM' }
+          ]
+        }
+      ],
+      lastUpdated: new Date().toISOString()
+    });
+  } else if (endpoint === 'analysis') {
+    res.json({
+      fight: {
+        fighter1: 'Dricus Du Plessis',
+        fighter2: 'Khamzat Chimaev',
+        weightClass: 'Middleweight'
+      },
+      oddsAnalysis: {
+        sportsbooks: 8,
+        bestOdds: { fighter1: -145, fighter2: +135 },
+        averageOdds: { fighter1: -150, fighter2: +130 }
+      },
+      recommendation: {
+        suggestedBet: 'Chimaev +130',
+        confidence: 'Medium',
+        reasoning: 'Value opportunity based on recent form'
+      }
+    });
+  } else {
+    res.json({ message: 'ESPN Live endpoint', endpoint, fightId, timestamp: new Date().toISOString() });
+  }
+});
+
 app.get('/v1/odds', (req, res) => {
   res.json({
     success: true,
     data: mockOdds,
     total: mockOdds.length,
-    message: "Real-time odds from multiple sportsbooks"
+    message: "Real-time odds from multiple sportsbooks",
+    liveOdds: {
+      data: [
+        {
+          eventName: 'UFC 319: Du Plessis vs. Chimaev',
+          fighter1: 'Dricus Du Plessis',
+          fighter2: 'Khamzat Chimaev',
+          eventDate: '2024-12-21',
+          sportsbooks: [
+            { name: 'DraftKings', odds: { fighter1: -150, fighter2: +130 } },
+            { name: 'FanDuel', odds: { fighter1: -145, fighter2: +125 } },
+            { name: 'BetMGM', odds: { fighter1: -155, fighter2: +135 } }
+          ]
+        }
+      ]
+    }
   });
 });
 
