@@ -502,6 +502,137 @@ app.get('/api/v1/compliance', (req, res) => {
   });
 });
 
+// News endpoints
+app.get('/api/v1/news', (req, res) => {
+  res.json({
+    success: true,
+    data: [
+      {
+        id: 1,
+        title: "UFC 319: Du Plessis vs. Chimaev Official for December 21st",
+        summary: "Middleweight champion Dricus Du Plessis will defend his title against undefeated contender Khamzat Chimaev",
+        content: "The UFC has officially announced that UFC 319 will feature a middleweight title fight between champion Dricus Du Plessis and top contender Khamzat Chimaev. The event is scheduled for December 21st at the United Center in Chicago, Illinois.",
+        author: "MMA Insider",
+        publishedAt: new Date().toISOString(),
+        category: "Fight Announcements",
+        tags: ["UFC 319", "Du Plessis", "Chimaev", "Middleweight"],
+        imageUrl: "/images/ufc319-announcement.jpg"
+      },
+      {
+        id: 2,
+        title: "Injury Update: Several Fighters Cleared for Upcoming Events",
+        summary: "Medical clearances issued for multiple fighters following recent training camp injuries",
+        content: "The UFC medical team has cleared several fighters who were previously dealing with minor injuries during their training camps. All fighters are expected to compete as scheduled.",
+        author: "UFC Medical Team",
+        publishedAt: new Date(Date.now() - 3600000).toISOString(),
+        category: "Medical Updates",
+        tags: ["Injuries", "Medical", "Training"],
+        imageUrl: "/images/medical-update.jpg"
+      },
+      {
+        id: 3,
+        title: "New Performance Analytics System Launched",
+        summary: "Advanced AI-powered analytics now available for comprehensive fight analysis",
+        content: "The UFC has partnered with leading technology companies to launch an advanced performance analytics system that provides unprecedented insights into fighter performance and fight predictions.",
+        author: "UFC Technology",
+        publishedAt: new Date(Date.now() - 7200000).toISOString(),
+        category: "Technology",
+        tags: ["Analytics", "AI", "Technology", "Performance"],
+        imageUrl: "/images/analytics-launch.jpg"
+      }
+    ],
+    total: 3,
+    message: "Latest UFC news and updates"
+  });
+});
+
+app.get('/api/v1/news/:id', (req, res) => {
+  const newsId = parseInt(req.params.id);
+  // Mock news article details
+  res.json({
+    success: true,
+    data: {
+      id: newsId,
+      title: "UFC 319: Du Plessis vs. Chimaev Official for December 21st",
+      content: "Full article content would be here...",
+      author: "MMA Insider",
+      publishedAt: new Date().toISOString(),
+      category: "Fight Announcements"
+    }
+  });
+});
+
+// Fighter comparison endpoint
+app.get('/api/v1/fighters/compare', (req, res) => {
+  const { fighter1, fighter2 } = req.query;
+  res.json({
+    success: true,
+    data: {
+      fighter1: {
+        name: "Dricus Du Plessis",
+        advantages: ["Striking Power", "Cardio", "Experience"],
+        stats: { reach: 76, height: 73, strikingAccuracy: 0.52 }
+      },
+      fighter2: {
+        name: "Khamzat Chimaev", 
+        advantages: ["Wrestling", "Takedowns", "Pressure"],
+        stats: { reach: 75, height: 74, takedownAccuracy: 0.67 }
+      },
+      comparison: {
+        strikingAdvantage: "Du Plessis",
+        grapplingAdvantage: "Chimaev",
+        experienceAdvantage: "Du Plessis",
+        physicalAdvantage: "Even"
+      }
+    }
+  });
+});
+
+// Rankings endpoint
+app.get('/api/v1/rankings', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      heavyweight: [
+        { rank: 1, name: "Jon Jones", record: "27-1-0" },
+        { rank: 2, name: "Tom Aspinall", record: "15-3-0" },
+        { rank: 3, name: "Ciryl Gane", record: "12-2-0" }
+      ],
+      middleweight: [
+        { rank: 1, name: "Dricus Du Plessis", record: "21-2-0" },
+        { rank: 2, name: "Sean Strickland", record: "28-6-0" },
+        { rank: 3, name: "Khamzat Chimaev", record: "13-0-0" }
+      ]
+    }
+  });
+});
+
+// Advanced analytics endpoint
+app.get('/api/v1/analytics/advanced', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      performanceMetrics: {
+        avgFightDuration: 12.5,
+        finishRate: 0.68,
+        decisionRate: 0.32,
+        koRate: 0.45,
+        submissionRate: 0.23
+      },
+      trends: {
+        strikingAccuracyTrend: "+2.3%",
+        takedownSuccessTrend: "-1.1%",
+        cardioPerformanceTrend: "+4.2%"
+      },
+      predictions: {
+        modelAccuracy: 0.873,
+        confidenceLevel: 0.92,
+        totalPredictions: 2847
+      }
+    }
+  });
+});
+
 // Demo endpoint
 app.get('/api/v1/demo', (req, res) => {
   res.json({
